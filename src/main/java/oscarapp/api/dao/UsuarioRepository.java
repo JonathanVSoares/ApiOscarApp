@@ -6,4 +6,5 @@ import oscarapp.api.model.Usuario;
 
 public interface UsuarioRepository extends MongoRepository<Usuario, String>{
 	Usuario findByLoginAndSenha(String login, String senha);
+	Usuario findByLogin(String login);
 }

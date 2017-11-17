@@ -10,22 +10,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import oscarapp.api.dao.UsuarioRepository;
 import oscarapp.api.model.Usuario;
-import oscarapp.domain.Votos;
 
-@RequestMapping("/login")
+@RequestMapping("/user")
 @RestController
-public class LoginController {
+public class UsuarioController {
 	@Autowired
 	private UsuarioRepository repo;
 
 	@RequestMapping(method = RequestMethod.GET)
-	public ResponseEntity<Votos> login(@RequestParam(value = "login") String login, @RequestParam(value = "senha") String senha) {
-		Usuario usuarioEncontrado = repo.findByLoginAndSenha(login, senha);
+	public ResponseEntity<?> cadastrarUsuario(@RequestParam(value = "login") String login,
+			@RequestParam(value = "senha") String senha) {
+		Usuario usuarioEncontrado = repo.findByLogin(login);
 		
-		if (usuarioEncontrado == null) {
-			return new ResponseEntity<Votos>(HttpStatus.UNAUTHORIZED);
+		if (usuarioEncontrado != null) {
+			return new ResponseEntity(HttpStatus.BAD_REQUEST);
 		}
 		
-		return new ResponseEntity<Votos>(usuarioEncontrado.getVotos(), HttpStatus.OK);
+		Usuario user = new Usuario();
+		user.setLogin(login);
+		user.setSenha(senha);
+		repo.save(user);
+		
+		return new ResponseEntity(HttpStatus.OK);
 	}
 }

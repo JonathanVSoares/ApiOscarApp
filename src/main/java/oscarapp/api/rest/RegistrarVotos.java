@@ -3,9 +3,10 @@ package oscarapp.api.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import oscarapp.api.dao.UsuarioRepository;
@@ -18,15 +19,17 @@ public class RegistrarVotos {
 	@Autowired
 	private UsuarioRepository repo;
 
-	@RequestMapping(method = RequestMethod.POST)
-	public ResponseEntity<Votos> login(@RequestBody Usuario usuario) {
-		Usuario usuarioEncontrado = repo.findByLoginAndSenha(usuario.getLogin(), usuario.getSenha());
+	@RequestMapping(method = RequestMethod.GET)
+	public ResponseEntity<Votos> login(@RequestParam(value = "login") String login,
+			@RequestParam(value = "votoDiretor") String votoDiretor,
+			@RequestParam(value = "votoFilme") String votoFilme) {
+		Usuario usuarioEncontrado = repo.findByLogin(login);
 
 		if (usuarioEncontrado == null) {
 			return new ResponseEntity<Votos>(HttpStatus.NOT_FOUND);
 		} else {
 			Votos votos = usuarioEncontrado.getVotos();
-			if (votos != null && votos.getDiretor() != null && votos.getFilme() != null) {
+			if (votos != null && !StringUtils.isEmpty(votos.getDiretor()) && !StringUtils.isEmpty(votos.getFilme())) {
 				return new ResponseEntity<Votos>(HttpStatus.BAD_REQUEST);
 			}
 		}
@@ -35,18 +38,19 @@ public class RegistrarVotos {
 
 		if (votos == null) {
 			votos = new Votos();
+			usuarioEncontrado.setVotos(votos);
 		}
 
-		if (votos.getFilme() == null) {
-			votos.setFilme(usuario.getVotos().getFilme());
+		if (StringUtils.isEmpty(votos.getFilme())) {
+			votos.setFilme(votoFilme);
 		}
-		
-		if (votos.getDiretor() == null) {
-			votos.setDiretor(usuario.getVotos().getDiretor());
+
+		if (StringUtils.isEmpty(votos.getDiretor())) {
+			votos.setDiretor(votoDiretor);
 		}
-		
+
 		repo.save(usuarioEncontrado);
 
-		return new ResponseEntity<Votos>(usuario.getVotos(), HttpStatus.OK);
+		return new ResponseEntity<Votos>(usuarioEncontrado.getVotos(), HttpStatus.OK);
 	}
 }
